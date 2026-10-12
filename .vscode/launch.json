@@ -1,0 +1,65 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "01 Deep Agents harness (LangGraph)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/01-langgraph-deepagents/src/trail-deepagents/main.py",
+      "cwd": "${workspaceFolder}/01-langgraph-deepagents/src/trail-deepagents",
+      "python": "${workspaceFolder}/01-langgraph-deepagents/src/trail-deepagents/.venv/Scripts/python.exe",
+      "envFile": "${workspaceFolder}/01-langgraph-deepagents/src/trail-deepagents/.env",
+      "env": {
+        "PORT": "8088"
+      },
+      "justMyCode": true,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "02 LangGraph workflow",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "langchain_azure_ai.agents.hosting.run",
+      "args": [
+        "--protocol",
+        "responses"
+      ],
+      "cwd": "${workspaceFolder}/02-langgraph-workflow/src/trail-langgraph-workflow",
+      "python": "${workspaceFolder}/02-langgraph-workflow/src/trail-langgraph-workflow/.venv/Scripts/python.exe",
+      "envFile": "${workspaceFolder}/02-langgraph-workflow/src/trail-langgraph-workflow/.env",
+      "env": {
+        "PORT": "8088"
+      },
+      "justMyCode": true,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "03 Agent Framework workflow",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/03-maf-workflow/src/trail-maf-workflow/main.py",
+      "cwd": "${workspaceFolder}/03-maf-workflow/src/trail-maf-workflow",
+      "python": "${workspaceFolder}/03-maf-workflow/src/trail-maf-workflow/.venv/Scripts/python.exe",
+      "envFile": "${workspaceFolder}/03-maf-workflow/src/trail-maf-workflow/.env",
+      "env": {
+        "PORT": "8088"
+      },
+      "justMyCode": true,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "04 Agent Framework Harness Agent",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/04-maf-harness/src/trail-maf-harness/main.py",
+      "cwd": "${workspaceFolder}/04-maf-harness/src/trail-maf-harness",
+      "python": "${workspaceFolder}/04-maf-harness/src/trail-maf-harness/.venv/Scripts/python.exe",
+      "envFile": "${workspaceFolder}/04-maf-harness/src/trail-maf-harness/.env",
+      "env": {
+        "PORT": "8088"
+      },
+      "justMyCode": true,
+      "console": "integratedTerminal"
+    }
+  ]
+}

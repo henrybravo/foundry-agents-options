@@ -1,0 +1,14 @@
+langchain-azure-ai[hosting]>=1.2.9
+azure-ai-projects
+# azure-ai-projects imports httpx directly, while OpenAI 3 uses httpx2.
+openai<3
+httpx<1
+langchain
+langchain-openai
+langgraph>=1.1.8
+# mcp reads the trail-review skill from a Foundry toolbox (toolbox_skills.py).
+mcp>=1.24,<2
+python-dotenv
+
+# debugpy enables local debugging of this agent with the Foundry Toolkit VS Code extension.
+debugpy

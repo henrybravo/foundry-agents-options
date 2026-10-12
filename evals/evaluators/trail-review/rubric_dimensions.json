@@ -1,0 +1,38 @@
+[
+  {
+    "id": "proposal_understanding",
+    "description": "Correctly identifies the substance of the group hike proposal, such as route, distance, start time, group size, leaders, and any protected areas it crosses.",
+    "weight": 3
+  },
+  {
+    "id": "rule_assessment_accuracy",
+    "description": "Assesses every safety rule (S1-S3) and environment rule (E1-E3) once, with a verdict of pass, concern, or fail that matches what the proposal actually states.",
+    "weight": 9
+  },
+  {
+    "id": "grounded_specificity",
+    "description": "Bases the review on concrete details from the proposal rather than generic statements, and quotes evidence verbatim for each rule.",
+    "weight": 6
+  },
+  {
+    "id": "missing_information_detection",
+    "description": "Marks rules the proposal is silent on as a concern with 'No evidence in proposal' and never invents facts that are not in the proposal.",
+    "weight": 5
+  },
+  {
+    "id": "decision_quality",
+    "description": "Ends with the correct overall verdict (Reject, Approve with conditions, or Approve) derived from the rule verdicts, with concrete conditions to fix.",
+    "weight": 6
+  },
+  {
+    "id": "structured_review_behavior",
+    "description": "Follows the required output format: a review result table, an overall verdict line, and a numbered list of conditions.",
+    "weight": 3
+  },
+  {
+    "id": "general_quality",
+    "description": "Other important quality factors not covered by listed criteria.",
+    "weight": 5,
+    "always_applicable": true
+  }
+]

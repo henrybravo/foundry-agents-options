@@ -1,0 +1,11 @@
+.venv/
+.env
+__pycache__/
+.azure/
+
+*.log
+
+demo-results/
+
+.env.*
+!.env.example

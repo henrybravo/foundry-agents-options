@@ -1,0 +1,12 @@
+name: trail-review
+agent:
+    name: trail-prompt-agent
+    kind: hosted
+dataset:
+    local_uri: ..\evals\trail-dataset.jsonl
+evaluators:
+    - builtin.task_adherence
+    - builtin.intent_resolution
+options:
+    eval_model: gpt-5.4-mini
+max_samples: 6

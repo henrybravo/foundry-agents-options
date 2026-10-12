@@ -1,0 +1,11 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Open Agent Inspector (port 8088)",
+      "type": "shell",
+      "command": "azd ai inspector launch --port 8088",
+      "problemMatcher": []
+    }
+  ]
+}

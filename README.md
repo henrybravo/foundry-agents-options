@@ -114,6 +114,15 @@ foundry-agents-options/
 └── 04-maf-harness/              # azure.yaml + src/trail-maf-harness
 ```
 
+## macOS and Linux (bash)
+
+Every PowerShell script has a bash equivalent with the same job and option names in kebab-case: `scripts/sync-shared.sh`, `scripts/deploy.sh`, `scripts/enable-tracing.sh`, `scripts/publish-skill.sh`, `scripts/eval.sh`, `scripts/smoke-test.sh`, `scripts/validate-mermaid.sh`, and `demo.sh`. For example `scripts/deploy.sh --skip-provision` replaces `pwsh scripts\deploy.ps1 -SkipProvision`, and `./demo.sh --model gpt-6-sol` replaces `pwsh .\demo.ps1 -Model gpt-6-sol`. They run on the macOS default bash 3.2 and need `python3`; `validate-mermaid.sh` also needs `node` and `npm`.
+
+- `install-deps-via-wsl.ps1` has no bash equivalent. It works around a Windows TLS problem; on macOS and Linux, `uv` installs the dependencies directly.
+- `deploy.sh` also takes `--project-name` (default `foundry-agent-options`), which names the new Foundry project and its resource group. Without it, azd names the project after the first agent's folder. It also sets `FOUNDRY_PROJECT_ENDPOINT` in each agent's environment before `azd ai project add`, which newer `azure.ai.agents` extension versions (seen with 1.0.0-beta.19) need.
+- `eval.sh` and `publish-skill.sh` take `--what-if` to print the commands without running them.
+- Older `uv` versions (0.7.2 was seen) reject the `system-certs` setting in the `uv.toml` of folders 03 and 04. Update `uv`, or run `uv sync --no-config --frozen` there.
+
 ## Prerequisites
 
 - Azure Developer CLI with the `azure.ai.agents` extension 1.0.0-beta.17 or later (`azd extension update --all`)

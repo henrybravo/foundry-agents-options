@@ -273,7 +273,7 @@ Application Insights bills through its Log Analytics workspace, which uses the p
 
 Traces capture prompt and response content. The demo uses a fictional proposal only; apply your data classification rules before you send real documents.
 
-`azd down` in `01-langgraph-deepagents` deletes the resource group, which removes the workspace and Application Insights along with the project.
+`azd down` in `01-langgraph-deepagents` deletes the resource group, which removes the workspace and Application Insights along with the project. See [Clean up](#clean-up) for what it leaves behind.
 
 ## Run the trail plan review
 
@@ -342,8 +342,31 @@ In VS Code, F5 starts the selected debug configuration. A breakpoint is a marker
 2. Open this folder in VS Code, set a breakpoint (for example in a workflow node), pick the configuration in Run and Debug, and press F5.
 3. Run the task **Open Agent Inspector (port 8088)**, or `azd ai inspector launch`, and send a request. Execution stops at the breakpoint.
 
+## Clean up
+
+Run `azd down --purge -C 01-langgraph-deepagents`. It deletes the resource group, which holds the Foundry resource, the project, Application Insights, and the workspace, and `--purge` removes the soft-deleted Foundry account so its name and quota are freed. Four things survive it, found when this demo was torn down:
+
+1. *Entra agent identities.* Each deployment creates one blueprint application per agent and the matching agent identity service principals (two deployments of this repo left 5 applications with 4 and 9 service principals), named after the Foundry resource (`cog-<suffix>-<project>-...`). They live in the tenant, not the resource group. List by prefix first and check the counts, then delete:
+
+   ```bash
+   # First label of the project endpoint host, for example cog-abc123
+   P="cog-<suffix>"
+   az ad app list --filter "startswith(displayName,'$P')" --query "[].displayName" -o tsv
+   az ad sp list  --filter "startswith(displayName,'$P')" --query "[].displayName" -o tsv
+   az ad sp list  --filter "startswith(displayName,'$P')" --query "[].id" -o tsv | xargs -I{} az ad sp delete --id {}
+   az ad app list --filter "startswith(displayName,'$P')" --query "[].id" -o tsv | xargs -I{} az ad app delete --id {}
+   ```
+
+   Read the listed names before you delete: every one should start with your Foundry resource name. Deleting the resource group alone does not remove them, and they stay visible in the Entra portal.
+2. *A soft-deleted Log Analytics workspace* (`log-trail-<suffix>`), kept for 14 days. It expires on its own. To remove it now, recreate a temporary resource group with the same name and region, run `az monitor log-analytics workspace recover`, then `az monitor log-analytics workspace delete --force true --yes`, and delete the temporary group.
+3. *A subscription-level deployment record* named `azd-foundry-<environment>-...`. It is metadata only and costs nothing. Remove it with `az deployment sub delete --name <name>` if you want a clean list.
+4. *Local state*: the git-ignored `.azure` folder in each agent folder and the `.venv` folder under each `src/<agent>`. Delete them by hand.
+
+Verify with `az group list`, the two `az ad ... list` commands above, `az cognitiveservices account list-deleted`, and `az monitor log-analytics workspace list-deleted-workspaces`.
+
 ## Tooling notes
 
+- `azd extension install azure.ai.agents` adds the agents commands, and `azd config set auth.useAzCliAuth true` makes azd reuse `az login`. `scripts/validate-mermaid.sh` also needs node and npm. The `application-insights` Azure CLI extension is only needed for ad hoc trace queries.
 - The `azd ai` extensions are beta. Verified with azd 1.34.2 and `azure.ai.agents` 1.0.0-beta.17. Test the full deploy in your own subscription first, and pin the extension versions once it works.
 - `agent-framework-foundry-hosting` is a prerelease package. `create_harness_agent` is released; its background agents, file access, and looping remain experimental.
 - MAF skill tools require approval by default. The harness variant auto-approves only `load_skill` and `read_skill_resource`.

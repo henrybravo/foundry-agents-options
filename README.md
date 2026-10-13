@@ -248,8 +248,8 @@ One `demo.ps1` run produces one trace per agent. Records are all rows in Applica
 
 How to read the traces:
 
-- The workflows always make three model calls in a fixed order, because the graph defines the steps. Their traces look the same on every run.
-- The harnesses decide their own steps. Each run starts with a model call, which then asks for tool calls to read the skill files, and ends with the answer. The number and order of tool calls can change between runs, so the traces vary too.
+- The workflows made three model calls in a fixed order in all six of my runs, because the graph defines the steps. Two of the six traces also carried duplicate spans from a second instrumentation layer reporting the same calls.
+- The harnesses decide their own steps. Each run starts with a model call, which then asks for tool calls to read the skill files, and ends with the answer. The number and order of tool calls can change between runs: Deep Agents used one tool round in two of three runs and four tool calls in the third, while the MAF harness followed the same sequence in all three. The span listings are in [docs/trace-logs.md](docs/trace-logs.md).
 - Deep Agents produces many more records than the others, mostly from infrastructure. The largest share is Azure Identity log lines about managed identity tokens. Deep Agents also runs with the Foundry checkpointer, which saves graph state to Foundry storage after each step and keeps the graph state across turns of the same session.
 - To compare reasoning, filter the trace to `chat` and `execute_tool` spans and ignore the HTTP and log rows.
 

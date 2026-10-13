@@ -324,14 +324,51 @@ flowchart LR
     class PT paasNode
 ```
 
-| Agent | Model calls | Tool calls | What the trace shows |
-|---|---|---|---|
-| `trail-langgraph-workflow` | 3 | None | Same three steps on every run |
-| `trail-maf-workflow` | 3 | None | Same three steps on every run |
-| `trail-maf-harness` | One per tool round, plus the answer | `load_skill`, then `read_skill_resource` for the rule files | The model chooses which skill files to read |
-| `trail-deepagents` | Fewer, when file reads are batched | File reads, often in one parallel batch | Many records are identity log lines and checkpoint storage calls |
+The shapes below come from three runs of each hosted agent on 13 Oct 2026 (swedencentral, `gpt-5.4-mini`). The span listing for every run is in [trace-logs.md](trace-logs.md).
 
-Compare `chat` and `execute_tool` spans to compare reasoning. The total record count mostly reflects logging and state storage.
+| Agent | Model calls | Tool calls | What the traces showed in three runs |
+|---|---|---|---|
+| `trail-langgraph-workflow` | 3 | None | Three model calls in every run |
+| `trail-maf-workflow` | 3 | None | Three model calls in every run |
+| `trail-deepagents` | Fewer, when file reads are batched | 1, 1, and 4 | One parallel tool round in two runs, four tool calls in the third |
+| `trail-maf-harness` | One per tool round, plus the answer | 4, 4, and 4 | `load_skill`, then a parallel call with two `read_skill_resource` reads, in every run |
+
+Compare `chat` and `execute_tool` spans to compare reasoning. Two things can make a trace look busier than the agent's real work:
+
+- A second instrumentation layer sometimes reports the same model calls again, as plain `chat gpt-5.4-mini` spans next to the date-suffixed ones. It happened in two of the six workflow traces and in every MAF harness trace, so the "chat calls" chip in the portal can read higher than the number of model calls.
+- `HTTP` spans for tokens, storage, and checkpoints outnumber the model and tool spans.
+
+### The same traces in the Foundry portal
+
+Same framework family, different loop owner. The workflow makes three chat calls and no tool calls:
+
+![Trajectories view of trail-maf-workflow: 26 spans, 3 chat calls, 13.8 seconds, with three invoke_agent steps](trail-maf-workflow_c44ee10fa773564e601d8cb1c6e6ab2c.png)
+
+*`trail-maf-workflow`, trace `c44ee10f...`: three chat calls and no tool calls.*
+
+The harness chooses its own tool calls. It loads the skill, then reads two rule files:
+
+![Trajectories view of trail-maf-harness: 25 spans, 4 chat calls, 4 tool calls, with load_skill and two read_skill_resource tool spans](trail-maf-harness_97caf068585d415b78f967994776723a.png)
+
+*`trail-maf-harness`, trace `97caf068...`: `load_skill`, then two `read_skill_resource` reads, with 4 chat calls and 4 tool calls.*
+
+The Graph view shows the same workflow shape as a graph, one `invoke_agent` step per node and one chat call under each:
+
+![Graph view of trail-langgraph-workflow: three invoke_agent steps, each with one chat call](graph-langgraph-workflow_e68b858964265e253ed28310f2205591.png)
+
+*`trail-langgraph-workflow`, trace `e68b8589...`, Graph view.*
+
+Deep Agents varied its steps. Here are two runs of the same agent, with one parallel tool round and with four tool calls:
+
+![Trajectories view of trail-deepagents with 2 chat calls and 1 tool call](trail-deepagents_2e81c482cbddb824de94361ad7f124b2.png)
+
+*`trail-deepagents`, trace `2e81c482...`: 2 chat calls and one parallel tool call.*
+
+![Trajectories view of trail-deepagents with 5 chat spans and 4 tool calls](trail-deepagents_6391184c8c7e751982aefd25c47ff62a.png)
+
+*`trail-deepagents`, trace `6391184c...`: four tool calls. The 5 chat spans include duplicates from the second instrumentation layer.*
+
+The red error markers on the Deep Agents traces are `404` responses on `GET .../state_stores/...`, each followed by a `201` create. Our reading is that the Foundry checkpointer finds no saved state for a brand-new session. Application Insights records these requests as successful and the agent run completed, but the portal flags 4xx responses as errors.
 
 ## 9. Skills from a Foundry toolbox
 

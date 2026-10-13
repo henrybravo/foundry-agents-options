@@ -77,7 +77,10 @@ fi
 
 CONFIG="eval.yaml"
 [ "$RUBRIC" -eq 1 ] && CONFIG="eval-rubric.yaml"
-TMP_DIR="${TMPDIR:-/tmp}"
+# A private temp directory (mode 0700) holds the per-agent configs. It is
+# removed on exit, except under --what-if, which keeps it for inspection.
+TMP_DIR="$(mktemp -d)"
+[ "$WHATIF" -eq 1 ] || trap 'rm -rf "$TMP_DIR"' EXIT
 
 write_config() {
   # Rewrites relative local_uri values to absolute paths so the temp copy

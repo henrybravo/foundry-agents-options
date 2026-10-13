@@ -91,7 +91,11 @@ if rows:
 
 # azd drops everything after the first newline of a positional message when
 # it forwards it to the agents extension, so send a Responses body file.
-BODY_FILE="${TMPDIR:-/tmp}/trail-demo-body.json"
+# A private temp directory (mode 0700) keeps the body out of a predictable,
+# shared path; it is removed on exit.
+BODY_DIR="$(mktemp -d)"
+trap 'rm -rf "$BODY_DIR"' EXIT
+BODY_FILE="$BODY_DIR/trail-demo-body.json"
 python3 - "$PROPOSAL" "$BODY_FILE" <<'PY'
 import json, sys
 text = open(sys.argv[1], encoding="utf-8").read()

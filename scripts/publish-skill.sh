@@ -89,7 +89,9 @@ else
 fi
 
 if ! test_azd ai toolbox show "$TOOLBOX" --project-endpoint "$EP"; then
-  DEFINITION="${TMPDIR:-/tmp}/$TOOLBOX.yaml"
+  DEFINITION_DIR="$(mktemp -d)"
+  trap 'rm -rf "$DEFINITION_DIR"' EXIT
+  DEFINITION="$DEFINITION_DIR/$TOOLBOX.yaml"
   printf 'description: Trail review demo toolbox that serves the trail-review skill\nskills:\n  - name: %s\n' "$SKILL" > "$DEFINITION"
   run_azd ai toolbox create "$TOOLBOX" --from-file "$DEFINITION" --project-endpoint "$EP"
 fi

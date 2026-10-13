@@ -59,6 +59,25 @@ function Get-ProjectId([string] $Folder) {
     $id.Trim()
 }
 
+function Get-ProjectEndpoint([string] $ProjectId) {
+    # https://<account>.services.ai.azure.com/api/projects/<project>, derived
+    # from /subscriptions/<s>/resourceGroups/<g>/providers/<p>/accounts/<a>/projects/<n>
+    $parts = $ProjectId -split '/'
+    "https://$($parts[8]).services.ai.azure.com/api/projects/$($parts[10])"
+}
+
+function Add-SharedProject([string] $Folder, [string] $ProjectId) {
+    # Newer azure.ai.agents extension versions (seen with 1.0.0-beta.19) expand
+    # ${FOUNDRY_PROJECT_ENDPOINT} in the manifest before 'ai project add'
+    # runs, so set it first from the shared project's ARM ID.
+    Invoke-Azd $Folder @(
+        'env', 'set', 'FOUNDRY_PROJECT_ENDPOINT', (Get-ProjectEndpoint $ProjectId)
+    )
+    Invoke-Azd $Folder @(
+        'ai', 'project', 'add', '--project-id', $ProjectId, '--force'
+    )
+}
+
 function Get-DeclaredModel {
     # Deployment names from the ai-project block of 01's azure.yaml.
     $yaml = Get-Content -Raw (
@@ -149,10 +168,7 @@ foreach ($m in $Model) {
         )
         if ($folder -eq $prompt) {
             if ($firstPass -and $sharedId) {
-                Invoke-Azd $folder @(
-                    'ai', 'project', 'add', '--project-id', $sharedId,
-                    '--force'
-                )
+                Add-SharedProject $folder $sharedId
             }
             Invoke-PromptDeploy $m
             continue
@@ -164,9 +180,7 @@ foreach ($m in $Model) {
         }
 
         if ($sharedId) {
-            Invoke-Azd $folder @(
-                'ai', 'project', 'add', '--project-id', $sharedId, '--force'
-            )
+            Add-SharedProject $folder $sharedId
         }
 
         Invoke-Azd $folder @('up')

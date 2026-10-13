@@ -9,6 +9,9 @@
 # Uses the current Azure CLI sign-in. The first run records its subscription
 # and tenant in each azd environment; later runs switch to that subscription
 # and refuse to run against any other. -Subscription/-TenantId override.
+# -ProjectName names the new Foundry project and its resource group
+# (default foundry-agent-options); without it azd would name the project
+# after the first agent's folder. Ignored when -ProjectId is given.
 # -SkipProvision runs only 'azd deploy' (new agent versions, no ARM changes)
 # once the project and model deployments exist.
 # Run: pwsh scripts\deploy.ps1
@@ -20,6 +23,7 @@ param(
     [string] $Subscription,
     [string] $TenantId,
     [string] $ProjectId,
+    [string] $ProjectName = 'foundry-agent-options',
     [string[]] $Agent = @(
         '00-prompt-agent',
         '01-langgraph-deepagents',
@@ -76,6 +80,21 @@ function Add-SharedProject([string] $Folder, [string] $ProjectId) {
     Invoke-Azd $Folder @(
         'ai', 'project', 'add', '--project-id', $ProjectId, '--force'
     )
+}
+
+function Initialize-ProjectEnv {
+    # azd names the Foundry project and resource group after the environment,
+    # so give 01 an environment named for the demo. Reuse it on re-runs.
+    if ($ProjectId -or $SkipProvision) { return }
+    $first = '01-langgraph-deepagents'
+    $existing = @(azd env list -o json -C (Join-Path $root $first) --no-prompt 2>$null |
+        ConvertFrom-Json | Where-Object { $_.Name -eq $ProjectName })
+    if ($existing.Count -gt 0) {
+        Invoke-Azd $first @('env', 'select', $ProjectName)
+    }
+    else {
+        Invoke-Azd $first @('env', 'new', $ProjectName)
+    }
 }
 
 function Get-DeclaredModel {
@@ -151,6 +170,7 @@ foreach ($m in $Model) {
 
 Assert-AzContext
 & (Join-Path $PSScriptRoot 'sync-shared.ps1')
+Initialize-ProjectEnv
 
 foreach ($folder in $Agent) {
     Invoke-Azd $folder @('env', 'set', 'AZURE_SUBSCRIPTION_ID', $Subscription)
